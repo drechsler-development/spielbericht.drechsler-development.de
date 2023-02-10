@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <title>Spielbericht-Generator HobbyLiga Leipzig</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap/css/bootstrap.css') }}" />
+
+    <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css') }}" />
+
+    <!-- Include Bootstrap DateTimePicker CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('/assets/css/custom.css') }}" />
+</head>
+<body>
+
+{% block CONTENT %}
+
+{% endblock %}
+
+<!-- BEGIN FOOTER -->
+
+<div class="footer container">
+    <div class="row">
+        <div class="col-6">
+            {{ 2023 }} &copy; [drechsler.development]
+        </div>
+        <div class="col-6 text-right">
+            | <span class="badge badge-success">v.1.0.3</span> (Release from 08.02.2023)
+        </div>
+    </div>
+</div>
+<!-- END FOOTER -->
+
+<!-- BEGIN JAVASCRIPTS(Load javascripts at bottom, this will reduce page load time) -->
+<!-- BEGIN CORE PLUGINS -->
+
+<!-- jQuery -->
+<script src="{{ asset('/assets/plugins/jquery/jQuery_3.6.3.js') }}"></script>
+
+<!-- Less Lib -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
+
+<!-- General Bootstrap -->
+<script src="{{ asset('/assets/plugins/bootstrap/js/bootstrap.js') }}"></script>
+<!-- Bootstrap Datepicker -->
+<script src="{{ asset('/assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js') }}"></script>
+<script src="{{ asset('/assets/plugins/bootstrap-datepicker/locales/bootstrap-datepicker.de.min.js') }}"></script>
+<!-- Bootstrap Timepicker -->
+<!-- Requires Moment.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
+<!-- Bootstrap Toast -->
+<script src="{{ asset('/assets/plugins/bootstrap-toastr/toastr.js') }}"></script>
+<script src="{{ asset('/assets/scripts/app.js') }}"></script>
+<!-- END CORE PLUGINS -->
+
+<!-- BEGIN PAGE LEVEL PLUGINS -->
+{% block PAGE_LEVEL_PLUGINS %}
+
+{% endblock %}
+<!-- END PAGE LEVEL PLUGINS -->
+
+<!-- BEGIN PAGE LEVEL SCRIPTS -->
+{% block PAGE_LEVEL_SCRIPTS %}
+
+{% endblock %}
+<!-- END PAGE LEVEL SCRIPTS -->
+
+<!-- BEGIN CALL SCRIPTS -->
+{% block CALL_SCRIPT %}
+    <script>
+        $(document).ready(function () {
+            App.init(); // initlayout and core plugins
+        });
+    </script>
+{% endblock %}
+<!-- END CALL SCRIPTS -->
+
+<!-- END JAVASCRIPTS -->
+</body>
+
+<!-- END BODY -->
+</html>
