@@ -1,0 +1,131 @@
+<form class="m-5">
+
+    {% if row.id %}
+
+        <input type="hidden" id="id" value="{{ row.id }}" />
+
+    {% endif %}
+
+    <h5 class="form-section text-info">Allgemein</h5>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="groupId">Staffel</label>
+        <div class="col-xl-4">
+            <select class="form-control" id="groupId" name="groupId">
+                <option value="0">Bitte wählen</option>
+                {% for group in groups %}
+                    <option value="{{ group.id }}" {% if group.id == row.groupId %}selected{% endif %}>{{ group.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <label class="col-xl-2 col-form-label" for="teamName">Name</label>
+        <div class="col-xl-4">
+            <input type="text" id="teamName" class="form-control" value="{{ row.teamName }}">
+        </div>
+    </div>
+
+    <h5 class="form-section text-info">Addresse</h5>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="address">Adresse</label>
+        <div class="col-xl-10">
+            <input type="text" id="address" class="form-control" value="{{ row.address }}">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="additionalAddress">Adresszusatz</label>
+        <div class="col-xl-10">
+            <input type="text" id="additionalAddress" class="form-control" value="{{ row.additionalAddress }}">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="postCode">Plz</label>
+        <div class="col-xl-3">
+            <input type="text" id="postCode" class="form-control" value="{{ row.postCode }}">
+        </div>
+
+        <label class="col-xl-2 col-form-label" for="city">Stadt</label>
+        <div class="col-xl-5">
+            <input type="text" id="city" class="form-control" value="{{ row.city }}">
+        </div>
+    </div>
+
+    <h5 class="form-section text-info">Hallenzeit</h5>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="day">Spieltag</label>
+        <div class="col-xl-4">
+            <select class="form-control" id="day" name="day">
+                <option value="0">Bitte wählen</option>
+                <option value="Montag" {% if row.day == 'Montag' %}selected{% endif %}>Montag</option>
+                <option value="Dienstag" {% if row.day == 'Dienstag' %}selected{% endif %}>Dienstag</option>
+                <option value="Mittwoch" {% if row.day == 'Mittwoch' %}selected{% endif %}>Mittwoch</option>
+                <option value="Donnerstag" {% if row.day == 'Donnerstag' %}selected{% endif %}>Donnerstag</option>
+                <option value="Freitag" {% if row.day == 'Freitag' %}selected{% endif %}>Freitag</option>
+                <option value="Samstag" {% if row.day == 'Samstag' %}selected{% endif %}>Samstag</option>
+                <option value="Sonntag" {% if row.day == 'Sonntag' %}selected{% endif %}>Sonntag</option>
+
+            </select>
+        </div>
+
+        <label class="col-xl-1 col-form-label" for="startTime">Start</label>
+        <div class="col-xl-2">
+            <input type="text" id="startTime" class="form-control" value="{{ row.startTime|date('H:i') }}">
+        </div>
+
+        <label class="col-xl-1 col-form-label" for="endTime">Ende</label>
+        <div class="col-xl-2">
+            <input type="text" id="endTime" class="form-control" value="{{ row.endTime|date('H:i') }}">
+        </div>
+    </div>
+
+    <h5 class="form-section text-info">1. Kontaktperson</h5>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="teamLeadName">Name</label>
+        <div class="col-xl-10">
+            <input type="text" id="teamLeadName" class="form-control" value="{{ row.teamLeadName }}">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="teamLeadEmail">Email</label>
+        <div class="col-xl-10">
+            <input type="text" id="teamLeadEmail" class="form-control" value="{{ row.teamLeadEmail }}">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="teamLeadTelephone">Telefon</label>
+        <div class="col-xl-10">
+            <input type="text" id="teamLeadTelephone" class="form-control" value="{{ row.teamLeadTelephone }}">
+        </div>
+    </div>
+
+    <h5 class="form-section text-info">2. Kontaktperson</h5>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="teamLeadName2">Name</label>
+        <div class="col-xl-10">
+            <input type="text" id="teamLeadName2" class="form-control" value="{{ row.teamLeadName2 }}">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="teamLeadEmail2">Email</label>
+        <div class="col-xl-10">
+            <input type="text" id="teamLeadEmail2" class="form-control" value="{{ row.teamLeadEmail2 }}">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-xl-2 col-form-label" for="teamLeadTelephone2">Telefon</label>
+        <div class="col-xl-10">
+            <input type="text" id="teamLeadTelephone2" class="form-control" value="{{ row.teamLeadTelephone2 }}">
+        </div>
+    </div>
+
+</form>

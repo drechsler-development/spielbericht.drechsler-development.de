@@ -1,0 +1,60 @@
+{% extends "base.twig" %}
+
+{% block PAGE_LEVEL_STYLES %}
+    {{ parent() }}
+{% endblock %}
+
+{% block CONTENT %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+                <div class="card border-0 shadow rounded-3 my-5">
+                    <div class="card-body p-4 p-sm-5">
+                        <h5 class="card-title text-center mb-5 fw-light fs-5">Spielbericht-Generator</h5>
+                        {% if logout %}
+                            <div class="alert alert-success" role="alert">
+                                Du wurdest erfolgreich ausgeloggt!
+                            </div>
+                        {% endif %}
+                        <form>
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="emailaddress" placeholder="name@domain.de" value="info@drechsler-development.de">
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="password" placeholder="Passwort" value="e$8qHo2qPve5">
+                            </div>
+                            <div class="form-floating mb-3">
+                                <button class="btn btn-primary btn-login" type="button" id="btnLogin">Login</button>
+                            </div>
+                            <div class="alert alert-danger" role="alert" style="display: none" id="errorMessage">
+
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block PAGE_LEVEL_PLUGINS %}
+    {{ parent() }}
+{% endblock %}
+
+
+{% block PAGE_LEVEL_SCRIPTS %}
+    {{ parent() }}
+    <script type="text/javascript" src="{{ asset('/assets/scripts/login.js') }}"></script>
+{% endblock %}
+
+
+{% block CALL_SCRIPT %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            Login.init();
+        });
+    </script>
+{% endblock %}

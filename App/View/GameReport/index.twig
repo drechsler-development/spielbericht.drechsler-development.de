@@ -1,0 +1,198 @@
+{% extends "base.twig" %}
+
+{% block CONTENT %}
+    <style>
+        .gast, .berichtMode {
+            display: none;
+        }
+
+        .heim input, .heim select {
+            background-color: #95b3c2;
+            color: black;
+        }
+
+        .gast input, .gast select {
+            background-color: #e3babe;
+            color: black;
+        }
+    </style>
+    <div class="container">
+        <form>
+
+            <div class="form-row">
+                <div class="col-md-9">
+                    <h3 class="mt-2">Spielbericht-Generator <span class="subtitle badge badge-info" id="subTitle">Team-Bearbeitungsmodus</span></h3>
+                </div>
+                <div class="col-md-3 text-right align-middle mt-2">
+                    <button type="button" class="btn btn-dark btnSwitchMode safeMode" data-targetMode="berichtMode">Neuen Spielbericht erstellen</button>
+                    <button type="button" class="btn btn-dark btnSwitchMode berichtMode" data-targetMode="">Zum Bearbeitungsmodus</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-2">
+                    <label for="groupName">Staffelname:</label>
+                    <input type="text" class="form-control" id="groupName" placeholder="Bsp: A3 oder B5" value="{{ ownTeam.groupName ?? '' }}" disabled>
+                </div>
+                <div class="form-group col-md-5">
+                    <label for="address">Adresse</label>
+                    <input type="text" class="form-control" id="address" placeholder="Bsp: Erich-Kästner-Schule" value="{{ ownTeam.address ?? '' }}, {{ ownTeam.postCode ?? '' }} {{ ownTeam.city ?? '' }}" disabled>
+                </div>
+                <div class="form-group col-md-5">
+                    <label for="additionalAdress">Spielstätte</label>
+                    <input type="text" class="form-control" id="additionalAdress" placeholder="Bsp: Erich-Kästner-Schule" value="{{ ownTeam.additionalAddress ?? '' }}" disabled>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="date">Datum:</label>
+                    <input type="text" class="form-control" id="date" value="{{ now|date('d.m.Y') }}">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="startTime">Start (Zeit)</label>
+                    <input type="text" class="form-control" id="startTime" value="{{ ownTeam.startTime ?? '' }}" disabled>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="endTime">Ende (Zeit)</label>
+                    <input type="text" class="form-control" id="endTime" value="{{ ownTeam.endTime ?? '' }}" disabled>
+                </div>
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group col-md-6 heim">
+                    {# <div class="form-group">
+                        <label for="t1Id">Auswahl Team (HEIM):</label> <select id="t1Id" class="form-control" data-pos="1">
+                            <option value="0">Neu Eingabe</option>
+                            {% for team in Teams %}
+                                <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div> #}
+                    <div class="form-group" id="single">
+                        <label for="t1Id">&nbsp;</label>
+                        <input type="hidden" id="t1Id" class="form-control" data-pos="1" value="{{ ownTeam.id }}">
+                        <input class="form-control" id="t1Name" value="{{ ownTeam.teamName }}" disabled>
+                    </div>
+                    <div class="form-group" id="multiple" style="display: none;">
+                        <label for="t1Id">Auswahl Team (Heim):</label>
+                        <select id="t1IdSelect" class="form-control" data-pos="1">
+                            <option value="0">Auswahl</option>
+                            {% for team in targetTeams %}
+                                <option value="{{ team.id }}">{{ team.teamName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <h5>Spieler (HEIM)</h5>
+                    {% for i in 1..constant('MAX_PLAYER_AMOUNT') %}
+                        <div class="form-row">
+                            <!-- TEAM 1 -->
+                            <!-- PLAYER 1 -->
+                            <div class="form-group col-lg-2 col-md-4 heim">
+                                <input type="number" class="form-control" id="p{{ i - 1 }}Number" placeholder="Nr." value="{{ ownPlayers[i - 1].number }}">
+                            </div>
+                            <div class="form-group col-lg-10 col-md-8 heim">
+                                <input type="text" class="form-control" id="p{{ i - 1 }}Name" placeholder="Spielername" value="{{ ownPlayers[i - 1].name }}">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="form-group col-md-6 gast berichtMode">
+                    <div class="form-group">
+                        <label for="t2Id">Team (GAST):</label>
+                        <select id="t2Id" class="form-control" data-pos="2">
+                            <option value="0">Auswahl</option>
+                            {% for team in targetTeams %}
+                                <option value="{{ team.id }}">{{ team.teamName }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" id="t2Name" value="">
+                    </div>
+                    <h5>Spieler (GAST)</h5>
+                    {% for i in 1..constant('MAX_PLAYER_AMOUNT') %}
+                        <div class="form-row">
+                            <!-- TEAM 2 -->
+                            <!-- PLAYER 1 -->
+                            <div class="form-group col-lg-2 col-md-4 gast berichtMode">
+                                <input type="number" class="form-control" id="t2p{{ i - 1 }}Number" placeholder="Nr." value="{{ playersTeam2[i].number }}">
+                            </div>
+                            <div class="form-group col-lg-10 col-md-8 gast berichtMode">
+                                <input type="text" class="form-control" id="t2p{{ i - 1 }}Name" placeholder="Spielername" value="{{ playersTeam2[i].name }}">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <button type="button" class="btn btn-success mb-5 berichtMode" id="btnGenerate" data-preview="0">Generiere Spielbericht</button>
+            {# <button type="button" class="btn btn-success mb-5 berichtMode" id="btnPreview" data-preview="1">Preview</button> #}
+            <button type="button" class="btn btn-danger mb-5 safeMode" id="btnSave">Speichere (HEIM) Spielerdaten</button>
+        </form>
+    </div>
+
+    <div class="modal" tabindex="-1" id="modalShowHint">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Hallo erstmal! :)</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Hier seht Ihr den Spielberichtgenerator.<br>
+                        Dieser besitzt zwei Modi: <br><br>
+                    <ol>
+                        <li>
+                            Den <span class="badge badge-info">Team-Bearbeitungsmodus</span>.<br>
+                            Hier könnt Ihr Euer Team bearbeiten und per Klick auf
+                            <button type="button" class="btn btn-danger btn-sm">Speichere (HEIM) Spielerdaten</button>
+                            speichern.<br>
+                            Die Daten werden dann in einer Datenbank gespeichert und können von anderen Teams eingesehen (aber nicht bearbeitet) oder für die Erstellung eines Spielberichtbogens ausgewählt werden.<br><br>
+                        </li>
+                        <li>
+                            Den <span class="badge badge-danger">Spielberichtsbogen-Generator</span>.<br>
+                            Hier könnt Ihr einen Spielberichtsbogen erstellen.<br>
+                            Auf der linken Seite ist dann Euer Team automatisch (vor)ausgewählt.<br>
+                            Auf der rechten Seite könnt Ihr dann das gegnerische Team (GAST) aus der Auswahlliste auswählen.<br>
+                            Sofern das gegenerische Team seine Daten hier im System eingepflegt hat, werden die Daten dann automatisch nach der Auswahl des Teams in die entsprechenden Felder gelesen.<br>
+                            Mit einem Klick auf
+                            <button type="button" class="btn btn-sm btn-success ">Generiere Spielbericht</button>
+                            , wird der Spielbericht im Hintergrund als PDF generiert und euch zum Download angeboten und kann dann von Euch ausgedruckt werden.
+                        </li>
+                    </ol>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnDontShowHint" class="btn btn-success" data-dismiss="modal">Dass habe ich verstanden :)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block PAGE_LEVEL_PLUGINS %}
+    {{ parent() }}
+    <script src="{{ asset('/assets/plugins/jquery-cookie/jquery-cookie.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+
+{% block PAGE_LEVEL_SCRIPTS %}
+    {{ parent() }}
+    <script src="{{ asset('/assets/scripts/game-report.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block CALL_SCRIPT %}
+    {{ parent() }}
+    <script>
+        jQuery(document).ready(function () {
+            App.initDatePicker();
+            App.initTimePicker();
+            GameReport.init();
+        });
+    </script>
+{% endblock %}
