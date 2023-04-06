@@ -1,0 +1,70 @@
+{% extends "base.twig" %}
+{% block PAGE_LEVEL_STYLES %}
+    {{ parent() }}
+    <link href="{{ asset('/assets/plugins/data-tables/DT_bootstrap.css') }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block CONTENT %}
+
+    <div class="row mb-3">
+
+        {# <div class="col-sm-2">
+            <button type="button" class="btn green btn-xs btnReload">
+                <i class="fa fa-refresh"></i>
+            </button>
+        </div> #}
+
+        <!--Team-->
+        <div class="col-sm-5">
+            <label for="filterTeamId" class="col-sm-2 col-form-label">Team:</label>
+            <div class="col-sm-10">
+                <select id="filterTeamId" class="form-control select2">
+                    <option value="0">Alle/Auswahl</option>
+                    {% for team in teams %}
+                        <option value="{{ team.id }}">{{ team.groupName }} - {{ team.teamName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!--Group-->
+        <div class="col-sm-5">
+            <label for="filterGroupId" class="col-sm-2 col-form-label">Gruppe:</label>
+            <div class="col-sm-10">
+                <select id="filterGroupId" class="form-control select2">
+                    <option value="0">Alle/Auswahl</option>
+                    {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="content"><!-- via AJAX --></div>
+
+
+
+{% endblock %}
+
+
+{% block PAGE_LEVEL_PLUGINS %}
+    {{ parent() }}
+    <script src="{{ asset('/assets/scripts/game.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+
+{% block PAGE_LEVEL_SCRIPTS %}
+    {{ parent() }}
+{% endblock %}
+
+{% block CALL_SCRIPT %}
+    {{ parent() }}
+    <script>
+        jQuery(document).ready(function () {
+            Game.init();
+            Game.initLoad();
+        });
+    </script>
+{% endblock %}

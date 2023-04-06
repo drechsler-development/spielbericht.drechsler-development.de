@@ -1,0 +1,66 @@
+{% if rows %}
+
+    <table class="table table-bordered table-responsive-sm" id="games" style="width: 100%">
+
+        <thead>
+        <tr>
+            <th class="text-center">Runde</th>
+            <th class="text-center">Staffel</th>
+            <th>Team</th>
+            <th>Gast</th>
+            <th class="text-right">Tag</th>
+            <th class="text-right">Datum</th>
+            <th class="text-right">Zeit</th>
+            <th>Ort</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            {% set color = row.round%2 == 0 ? '#FFF' : '#EFEFEF' %}
+            <tr id="line_{{ row.id }}" style="background-color: {{ color }}">
+                <td class="text-center"><span class="badge badge-info">{{ row.round }}</span></td>
+                <td class="text-center"><span class="btnGroupTrigger" data-id="{{ row.groupId }}">{{ row.groupName }}</span></td>
+                <td><span class="btnTeamTrigger" data-id="{{ row.teamIdHome }}">{{ row.teamNameHome }}</span></td>
+                <td><span class="btnTeamTrigger" data-id="{{ row.teamIdGast }}">{{ row.teamNameGast }}</span></td>
+                <td class="text-right">
+                    {% set day = row.day %}
+                    {% if day == 0 %}
+                        Mo
+                    {% elseif day == 1 %}
+                        Di
+                    {% elseif day == 2 %}
+                        Mi
+                    {% elseif day == 3 %}
+                        Do
+                    {% elseif day == 4 %}
+                        Fr
+                    {% elseif day == 5 %}
+                        Sa
+                    {% elseif day == 6 %}
+                        So
+                    {% endif %}</td>
+                <td class="text-right">{{ row.date|date('d.m.Y') }}</td>
+                <td class="text-right" nowrap="">
+                    {{ row.startTime|date('H:i') }} - {{ row.endTime|date('H:i') }}
+                </td>
+                <td>
+                    {{ row.address }}<br>
+                    {% if row.additionalAddress %}
+                        {{ row.additionalAddress }}<br>
+                    {% endif %}
+                    {{ row.postCode }} {{ row.city }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <!-- add spacer for elements that are fixed to the bottom of the page -->
+    <div class="mb-5">
+        &nbsp;
+    </div>
+
+{% else %}
+    <div class="alert alert-warning">
+        Keine Einträge gefunden
+    </div>
+{% endif %}

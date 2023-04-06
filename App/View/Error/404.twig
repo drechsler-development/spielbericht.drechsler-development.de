@@ -1,0 +1,51 @@
+{% extends "base.twig" %}
+
+{% block PAGE_LEVEL_STYLES %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('/assets/css/error.css') }}" />
+{% endblock %}
+
+{% block CONTENT %}
+
+    <div class="page-content-wrapper">
+        <div class="page-content">
+
+            <div class="row">
+                <div class="col-md-12 page-404">
+                    <div class="number">
+                        404
+                    </div>
+                    <div class=" details">
+                        <h3>Oops! Hier ist <b>Murphy</b> unterwegs.</h3>
+                        <p>
+                            Scheint so, als gäbe es noch keine Seite für diesen Link, oder es liegt ein Schreibfehler vor!<br />
+                            Der Administrator/Entwickler wurde aber informiert und wird den Fehler schnellstens beheben.<br /><br />
+                        </p>
+                        {% if errorMessage %}
+                            <p>
+                                Fehler: {{ errorMessage }}<br>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+
+{% block PAGE_LEVEL_PLUGINS %}
+    {{ parent() }}
+{% endblock %}
+
+
+{% block PAGE_LEVEL_SCRIPTS %}
+    {{ parent() }}
+{% endblock %}
+
+{% block CALL_SCRIPT %}
+    {{ parent() }}
+{% endblock %}

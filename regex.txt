@@ -1,0 +1,80 @@
+TRUNCATE TABLE games_temp;
+TRUNCATE TABLE games;
+
+## remove Staffel \d
+Staffel \d{1,2}\r\n
+
+## remove Headlines
+Spieltag\r\nBegegnung\r\nHinspiel am\r\nRückspiel am\r\nMannschaft\r\nMannschaft\r\n
+
+## Split into 2 columns Spieltage
+(\d{1,2}) und \d{1,2}\r\n
+
+### add year at the end
+(\d{2}\.\d{2})\.\r\n
+$1\.2023\r\n
+
+### add 20 before year 24
+(\d{2}\.\d{2})\.[2][4]
+$1\.2024\r\n
+
+## Format Date
+(\d{2})\.(\d{2})\.(\d{4})\r\n(\d{2})\.(\d{2})\.(\d{4})
+$3-$2-$1\r\n$6-$5-$4
+
+### replace \r\n with \t
+\r\n
+\t
+
+
+## Break after second date
+(\d{4}\-\d{2}\-\d{2}\t\d{4}\-\d{2}\-\d{2})\t
+$1\r\n
+
+### remopve trailing \t
+\r\n\t
+\r\n
+
+### add quotes
+\t
+"\t"
+
+\r\n
+"\r\n"
+
+### replace tab with comma
+\t
+,
+
+
+
+
+Lausbuben I	TSV Lausbuben I
+Geckos	Geckos Engelsdorf
+VVC II	VVC 90 II
+VVC I	VVC 90 I
+Füchse I	Volleyball Füchse Markranstädt I
+Volle Pulle	Volle Pulle 06
+LE Spätstarter	L.E. Spätstarter
+The Reefs Dölzig	Reefs Dölzig
+Nordvorstadt	SG Nordvorstadt
+AC Taucha	AC Taucha I
+Einheit Borna	SV Einheit Borna
+
+### SQL
+
+UPDATE games_temp g
+INNER JOIN teams t ON t.teamName = g.teamHome
+SET g.teamIdHome = t.id;
+
+UPDATE games_temp g
+INNER JOIN teams t ON t.teamName = g.teamGast
+SET g.teamIdGast = t.id;
+
+UPDATE games set round1 = if(CEIL(MOD(id,15)/3) = 0,5,CEIL(MOD(id,15)/3));
+UPDATE games set round2 = round1 + 5;
+
+INSERT INTO games (`round`,`teamIdHome`,`teamIdGast`,`date`) SELECT round1,teamIdHome,teamIdGast,dateHome from games_temp;
+INSERT INTO games (`round`,`teamIdHome`,`teamIdGast`,`date`) SELECT round2,teamIdGast,teamIdHome,dateGast from games_temp;
+
+UPDATE games set round = if(CEIL(MOD(g.id,15)/3) = 0,5,CEIL(MOD(g.id,15)/3));
