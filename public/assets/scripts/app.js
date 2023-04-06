@@ -71,8 +71,8 @@ let App = function () {
 
     let InitTimePicker = function () {
 
-        $('#startTime,#endTime,#time').datetimepicker({
-            format: 'HH:mm',
+        $('#startTime,#endTime,#time').timepicker({
+            showMeridian: false,
             stepping: 15,
         });
     }

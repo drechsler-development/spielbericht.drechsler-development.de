@@ -2,78 +2,92 @@
 
 namespace App\Model;
 
-use DD\Database;
-use DD\Exceptions\ValidationException;
+use App\Model;
 use PDO;
 
-class Team
+class Team extends Model
 {
 
-	public int    $id        = 0;
-	public string $name      = '';
-	public string $address   = '';
-	public string $startTime = '';
-	public string $endTime   = '';
+	public int    $id                = 0;
+	public string $teamName          = '';
+	public string $address           = '';
+	public string $additionalAddress = '';
+	public string $startTime         = '';
+	public string $endTime           = '';
+	public string $groupName         = '';
 
-	public array  $players   = [];
-	public string $groupName = '';
+	public array $rows = [];
 
-	private PDO $conPDO;
+	public array $players = [];
 
-	/**
-	 * @throws ValidationException
-	 */
 	public function __construct () {
 
-		$this->conPDO = Database::getInstance ();
+		parent::__construct ();
+
+		$this->allowedFields = [
+			'teamName',
+			'address',
+			'additionalAddress',
+			'postCode',
+			'city',
+			'day',
+			'startTime',
+			'endTime',
+			'teamLeadName',
+			'teamLeadEmail',
+			'teamLeadTelephone',
+			'teamLeadName2',
+			'teamLeadEmail2',
+			'teamLeadTelephone2',
+		];
+
+		$this->table = 'teams';
 	}
 
-	/**
-	 * @param bool $json
-	 * @return array|string
-	 * @throws ValidationException
-	 */
-	public function Load (): array|string {
+	public function Load (): array {
 
-		$players     = [];
-		$whereString = "";
+		$whereString = "1 = 1";
+
 		if (!empty($this->id)) {
-			$whereString = " AND id = :id";
+			$whereString .= " AND t.id = :id";
 		}
+
 		$SQL  = "SELECT 
-                    id, 
-                    name, 
-                    address, 
-                    TIME_FORMAT(startTime,'%H:%i') as startTime, 
-                    TIME_FORMAT(endTime,'%H:%i') as endTime, 
-                    groupName 
+					IFNULL(t.id,0) as id,
+					IFNULL(t.groupId,0) as groupId,
+					IFNULL(t.teamName,'') as teamName,
+					IFNULL(t.teamLeadName,'') as teamLeadName,
+					IFNULL(t.teamLeadEmail,'') as teamLeadEmail,
+					IFNULL(t.teamLeadTelephone,'') as teamLeadTelephone,
+					IFNULL(t.teamLeadName2,'') as teamLeadName2,
+					IFNULL(t.teamLeadEmail2,'') as teamLeadEmail2,
+					IFNULL(t.teamLeadTelephone2,'') as teamLeadTelephone2,
+					IFNULL(t.address,'') as address,
+					IFNULL(t.additionalAddress,'') as additionalAddress,
+					IFNULL(t.postCode,'') as postCode,
+					IFNULL(t.city,'') as city,
+					IFNULL(t.day,'') as day,
+					TIME_FORMAT(startTime,'%H:%i') as startTime, 
+					TIME_FORMAT(endTime,'%H:%i') as endTime,
+					IFNULL(tg.name,'') as groupName
+					
 				FROM 
-				    teams 
+				    teams t 
+				LEFT JOIN 
+				    teamGroups tg 
+				    ON tg.id = t.groupId
 				WHERE 
-				    1 = 1 
-				    $whereString";
+				    $whereString
+				ORDER BY 
+				    tg.name, 
+				    t.teamName";
 		$stmt = $this->conPDO->prepare ($SQL);
 		if (!empty($this->id)) {
 			$stmt->bindValue (':id', $this->id, PDO::PARAM_INT);
 		}
 		$stmt->execute ();
-		$team = $stmt->fetchAll (PDO::FETCH_ASSOC);
-		if (!$team) {
-			throw new ValidationException ("Team not found");
-		}
 
-		if (!empty($this->id)) {
-
-			$SQL  = "SELECT id, name, number, position FROM players WHERE teamId = :teamId";
-			$stmt = $this->conPDO->prepare ($SQL);
-			$stmt->bindValue (':teamId', $this->id, PDO::PARAM_INT);
-			$stmt->execute ();
-			$players = $stmt->fetchAll (PDO::FETCH_ASSOC);
-			$team    = array_merge ($team[0], ['players' => $players]);
-		}
-
-		return $team;
-
+		return $stmt->fetchAll (PDO::FETCH_ASSOC);
 	}
 
 	public function AddPlayer (Player $player): void {
@@ -81,91 +95,12 @@ class Team
 		$this->players[] = $player;
 	}
 
-	//export players to a json file
-	public function Export (): string {
+	public function UpdatePlayers (): void {
 
-		$path = "/TEMP/".$this->name.".json";
-
-		$data['players']           = $this->players;
-		$data['team']['name']      = $this->name;
-		$data['team']['address']   = $this->address;
-		$data['team']['startTime'] = $this->startTime;
-		$data['team']['endTime']   = $this->endTime;
-
-		$jsonData   = json_encode ($data);
-		$this->name = preg_replace ('/[^A-Za-z0-9\-]/', '', $this->name);
-		file_put_contents ($_SERVER['DOCUMENT_ROOT'].$path, $jsonData);
-
-		return $path;
-
-	}
-
-	public function Import ($filePath): string {
-
-		//Get filename extension
-		$ext = pathinfo ($filePath, PATHINFO_EXTENSION);
-		if ($ext != "json") {
-			return json_encode (["error" => "File extension not allowed. Only json files are allowed."]);
-		}
-
-		$data = file_get_contents ($filePath);
-		//check if $data contains json data
-		if (!json_decode ($data)) {
-			return json_encode (["error" => "File is not a valid json file."]);
-		}
-
-		return $data;
-
-	}
-
-	//save data to database
-	public function Save (): void {
-
-		//Check if name already exists
-		$SQL = "SELECT id FROM teams WHERE name LIKE :name";
-		$stm = $this->conPDO->prepare ($SQL);
-		$stm->bindValue (':name', $this->name);
-		$stm->execute ();
-		if ($stm->rowCount () > 0) {
-			$array    = $stm->fetch (PDO::FETCH_ASSOC);
-			$this->id = $array['id'];
-		} else {
-			$SQL = "INSERT INTO 
-                    teams (
-                           name
-                           ) 
-					VALUES (
-					        'NEU'
-					        )";
-			$stm = $this->conPDO->prepare ($SQL);
-			$stm->execute ();
-			$this->id = $this->conPDO->lastInsertId ();
-		}
-
-		$this->Update ();
-
-	}
-
-	public function Update (): void {
-
-		$SQL = "UPDATE 
-                    teams 
-				SET 
-					name = :name, 
-					address = :address, 
-					groupName = :groupName, 
-					startTime = :startTime, 
-					endTime = :endTime
-				WHERE 
-				    id = :id";
-		$stm = $this->conPDO->prepare ($SQL);
-		$stm->bindValue (':name', $this->name);
-		$stm->bindValue (':address', $this->address);
-		$stm->bindValue (':groupName', $this->groupName);
-		$stm->bindValue (':startTime', $this->startTime);
-		$stm->bindValue (':endTime', $this->endTime);
-		$stm->bindValue (':id', $this->id);
-		$stm->execute ();
+		//Show Array with pre
+		echo '<pre>';
+		print_r ($this->players);
+		echo '</pre>';
 
 		if (!empty($this->players)) {
 			$SQL = "DELETE FROM players WHERE teamId = :teamId";
@@ -175,20 +110,20 @@ class Team
 
 			foreach ($this->players as $player) {
 				$SQL = "INSERT INTO 
-						players (
-								teamId,
-								number,
-								name,
-								position,
-						        fieldPosition
-								) 
-						VALUES (
-								:teamId,
-								:number,
-								:name,
-								:position,
-						        :fieldPosition
-								)";
+							players (
+									teamId,
+									number,
+									name,
+									position,
+									fieldPosition
+									) 
+							VALUES (
+									:teamId,
+									:number,
+									:name,
+									:position,
+									:fieldPosition
+									)";
 				$stm = $this->conPDO->prepare ($SQL);
 				$stm->bindValue (':teamId', $this->id, PDO::PARAM_INT);
 				$stm->bindValue (':name', $player->name);

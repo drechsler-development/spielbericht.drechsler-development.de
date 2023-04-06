@@ -2,10 +2,14 @@
 
 namespace App\Controller;
 
+use App\Error;
+use App\Model\Group;
 use App\Model\Player;
 use App\Model\Team;
+use App\ResponseArray;
 use App\View;
 use DD\Exceptions\ValidationException;
+use Exception;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -14,106 +18,12 @@ class TeamController extends BackendController
 {
 
 	/**
-	 * @throws SyntaxError
-	 * @throws RuntimeError
+	 * @return void
 	 * @throws LoaderError
+	 * @throws RuntimeError
+	 * @throws SyntaxError
 	 */
 	public function IndexAction (): void {
-
-		$demo     = !empty($_GET['demo']);
-		$demoData = [];
-
-		if ($demo) {
-
-			$playersTeam1 = [
-				[
-					'number' => '13',
-					'name'   => 'Ronny Dahms-Haller',
-				],
-				[
-					'number' => '12',
-					'name'   => 'Fabian Christiansen',
-				],
-				[
-					'number' => '11',
-					'name'   => 'Chris Dahle',
-				],
-				[
-					'number' => '10',
-					'name'   => 'Gunnar Müller',
-				],
-				[
-					'number' => '15',
-					'name'   => 'Raimo Rubin',
-				],
-				[
-					'number' => '09',
-					'name'   => 'Alexander Meier',
-				],
-				[
-					'number' => '98',
-					'name'   => 'Felix Fehrmann (Libero)',
-				],
-				[
-					'number' => '99',
-					'name'   => 'Oliver Haufe (Libero)',
-				],
-				[
-					'number' => '20',
-					'name'   => 'Ansgar Gottschalk',
-				]
-			];
-			$playersTeam2 = [
-				[
-					'number' => '14',
-					'name'   => 'Klaus Klausen',
-				],
-				[
-					'number' => '13',
-					'name'   => 'Fritz Wepper',
-				],
-				[
-					'number' => '12',
-					'name'   => 'Arnold Schwarzenegger',
-				],
-				[
-					'number' => '11',
-					'name'   => 'Bruce Willis',
-				],
-				[
-					'number' => '16',
-					'name'   => 'Gerd Fröbe',
-				],
-				[
-					'number' => '10',
-					'name'   => 'Gottfried John',
-				],
-				[
-					'number' => '97',
-					'name'   => 'Axel Prahl',
-				],
-				[
-					'number' => '96',
-					'name'   => 'Dirk Bach',
-				],
-				[
-					'number' => '21',
-					'name'   => 'Mirco Nontschew',
-				]
-			];
-
-			$demoData['demo']['playersTeam1'] = $playersTeam1;
-			$demoData['demo']['playersTeam2'] = $playersTeam2;
-
-			$demoData['demo']['address']   = 'Martin Luther Gymnasium';
-			$demoData['demo']['groupName'] = "A1";
-			$demoData['demo']['date']      = date ("d.m.Y");
-			$demoData['demo']['startTime'] = '20:15';
-			$demoData['demo']['endTime']   = '22:15';
-			$demoData['demo']['t1Name']    = 'Alles wird gut II';
-			$demoData['demo']['t2Name']    = 'Bunte TV Mische';
-
-		}
 
 		$Team  = new Team();
 		$teams = $Team->Load ();
@@ -121,82 +31,218 @@ class TeamController extends BackendController
 		$data = [
 			/*'navigationArray'  => $this->navigationArray,
 			'headerArray'      => $this->headerArray,*/
-			'PAGE_TITLE'       => 'Spielberichtsgenerator',
-			'PAGE_DESCRIPTION' => 'Zack Peng -> Fertig isser!',
-			'teams'            => $teams,
-			'demo'             => $demoData,
+			'PAGE_TITLE'       => 'Teamübersicht',
+			'PAGE_DESCRIPTION' => '',
+			'rows'             => $teams,
 		];
 
-		View::RenderTemplate ('Spielbericht/index.twig', array_merge ($data/*, $this->globalData*/));
+		View::RenderTemplate ('Teams/index.twig', array_merge ($data, $this->globalData));
 
 	}
 
-	public function SaveAction () {
+	public function LoadAction (): void {
+
+		$ResponseArray = new ResponseArray();
+
+		$Team     = new Team();
+		$Team->id = $this->params['id'] ?? 0;
+		$teams    = $Team->Load ();
+
+		$ResponseArray->AddData (['Teams' => $teams]);
+
+		$ResponseArray->ReturnOutput ();
+
+	}
+
+	public function SaveAction (): void {
+
+		$ResponseArray = new ResponseArray();
+
+		$id                 = $_POST['id'] ?? 0;
+		$teamName           = $_POST['teamName'] ?? '';
+		$address            = $_POST['address'] ?? '';
+		$additionalAddress  = $_POST['additionalAddress'] ?? '';
+		$postCode           = $_POST['postCode'] ?? '';
+		$city               = $_POST['city'] ?? '';
+		$day                = $_POST['day'] ?? '';
+		$startTime          = $_POST['startTime'] ?? '';
+		$endTime            = $_POST['endTime'] ?? '';
+		$teamLeadName       = $_POST['teamLeadName'] ?? '';
+		$teamLeadEmail      = $_POST['teamLeadEmail'] ?? '';
+		$teamLeadTelephone  = $_POST['teamLeadTelephone'] ?? '';
+		$teamLeadTelephone  = str_replace (' ', '', $teamLeadTelephone);
+		$teamLeadTelephone  = str_replace ('0049', '+49', $teamLeadTelephone);
+		$teamLeadName2      = $_POST['teamLeadName2'] ?? '';
+		$teamLeadEmail2     = $_POST['teamLeadEmail2'] ?? '';
+		$teamLeadTelephone2 = $_POST['teamLeadTelephone2'] ?? '';
+		$teamLeadTelephone2 = str_replace (' ', '', $teamLeadTelephone2);
+		$teamLeadTelephone2 = str_replace ('0049', '+49', $teamLeadTelephone2);
+
+		try {
+
+			if (empty($teamName)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($address)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($postCode)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($city)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($day)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($startTime)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($endTime)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($teamLeadName)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (empty($teamLeadEmail) && empty($teamLeadTelephone)) {
+				throw new ValidationException("Keinen Namen übergeben");
+			}
+
+			if (!empty($teamLeadName2)) {
+				if (empty($teamLeadEmail2) && empty($teamLeadTelephone2)) {
+					throw new ValidationException("Keinen Namen übergeben");
+				}
+			}
+
+			if (!empty($teamLeadEmail)) {
+				if (!filter_var ($teamLeadEmail, FILTER_VALIDATE_EMAIL)) {
+					throw new ValidationException("Keine gültige Email übergeben für TeamLead1");
+				}
+			}
+
+			if (!empty($teamLeadEmail2)) {
+				if (!filter_var ($teamLeadEmail2, FILTER_VALIDATE_EMAIL)) {
+					throw new ValidationException("Keine gültige Email übergeben für TeamLead2");
+				}
+			}
+
+			$Team     = new Team();
+			$Team->id = $id;
+
+			$array = [
+				'teamName'           => $teamName,
+				'address'            => $address,
+				'additionalAddress'  => $additionalAddress,
+				'postCode'           => $postCode,
+				'city'               => $city,
+				'day'                => $day,
+				'startTime'          => $startTime,
+				'endTime'            => $endTime,
+				'teamLeadName'       => $teamLeadName,
+				'teamLeadEmail'      => $teamLeadEmail,
+				'teamLeadTelephone'  => $teamLeadTelephone,
+				'teamLeadName2'      => $teamLeadName2,
+				'teamLeadEmail2'     => $teamLeadEmail2,
+				'teamLeadTelephone2' => $teamLeadTelephone2,
+			];
+
+			$Team->Update ($array);
+
+		} catch (Exception $e) {
+			$ResponseArray->error = Error::HandleErrorMessage ($e);
+		}
+
+		$ResponseArray->ReturnOutput ();
+
+	}
+
+	public function LoadSingleAction (): void {
+
+		$ResponseArray = new ResponseArray();
+
+		$id   = $_POST['id'] ?? 0;
+		$json = !empty($_POST['json']);
+
+		try {
+
+			if (empty($id)) {
+				throw new ValidationException('Team ID is empty');
+			}
+			if (!$json) {
+				$Group          = new Group();
+				$groups         = $Group->Load ();
+				$data['groups'] = $groups;
+
+			}
+
+			$Team        = new Team();
+			$Team->id    = $id;
+			$teams       = $Team->Load ();
+			$data['row'] = $teams[0] ?? [];
+
+			if (!$json) {
+				ob_start ();
+				View::RenderTemplate ('Teams/form.twig', array_merge ($data, $this->globalData));
+				$data = ob_get_contents ();
+				ob_end_clean ();
+			} else {
+				echo json_encode ($data);
+
+				return;
+			}
+
+			$ResponseArray->data = $data;
+
+		} catch (Exception $e) {
+			$ResponseArray->error = Error::HandleErrorMessage ($e);
+		}
+
+		$ResponseArray->ReturnOutput ();
+
+	}
+
+	public function UpdatePlayersAction (): void {
+
+		//Show Array with pre
+		echo '<pre>';
+		print_r ($_POST);
+		echo '</pre>';
 
 		$responseArray['error'] = '';
 
-		$address   = $_POST['address'] ?? '';
-		$groupName = $_POST['groupName'] ?? '';
-		$date      = $_POST['date'] ?? '';
-		$startTime = $_POST['startTime'] ?? '';
-		$endTime   = $_POST['endTime'] ?? '';
-		$t1Name    = $_POST['t1Name'] ?? '';
-		$t2Name    = $_POST['t2Name'] ?? '';
-		$save      = !empty($_POST['save']);
-
 		//Building Team Player Arrays
-		$playersTeam1 = [];
-		$playersTeam2 = [];
+		$players = [];
 		for ($i = 0; $i < MAX_PLAYER_AMOUNT; $i++) {
 			//Team 1
-			$playerName        = 't1p'.$i.'Name';
-			$playerNumber      = 't1p'.$i.'Number';
-			$singlePlayerArray = [];
+			$playerName   = 'p'.$i.'Name';
+			$playerNumber = 'p'.$i.'Number';
+			$playerArray  = [];
 			if (!empty($_POST[$playerName])) {
-				$singlePlayerArray['name']   = $_POST[$playerName];
-				$singlePlayerArray['number'] = !empty($_POST[$playerNumber]) ? $_POST[$playerNumber] : '';
-				$playersTeam1[]              = $singlePlayerArray;
-			}
-			//Team 2
-			$playerName        = 't2p'.$i.'Name';
-			$playerNumber      = 't2p'.$i.'Number';
-			$singlePlayerArray = [];
-			if (!empty($_POST[$playerName])) {
-				$singlePlayerArray['name']   = $_POST[$playerName];
-				$singlePlayerArray['number'] = !empty($_POST[$playerNumber]) ? $_POST[$playerNumber] : '';
-				$playersTeam2[]              = $singlePlayerArray;
+				$playerArray['name']   = $_POST[$playerName];
+				$playerArray['number'] = !empty($_POST[$playerNumber]) ? $_POST[$playerNumber] : '';
+				$players[]             = $playerArray;
 			}
 		}
 
-		$Team            = new Team();
-		$Team->address   = $address;
-		$Team->groupName = $groupName;
-		$Team->startTime = $startTime;
-		$Team->endTime   = $endTime;
-		$Team->name      = $t1Name;
-		foreach ($playersTeam1 as $player) {
+		$Team     = new Team();
+		$Team->id = $_SESSION['login']['teamId'];
+		foreach ($players as $player) {
 			$Player         = new Player();
 			$Player->name   = $player['name'];
 			$Player->number = $player['number'];
 			$Team->AddPlayer ($Player);
 		}
-		$Team->Save ();
+		$Team->UpdatePlayers ();
 
 		echo json_encode ($responseArray);
+
 	}
-
-	/**
-	 * @throws ValidationException
-	 */
-	public function LoadAction () {
-
-		$responseArray['error'] = '';
-
-		$Team                  = new Team();
-		$Team->id              = $_POST['id'] ?? 0;
-		$team                  = $Team->Load ();
-		$responseArray['data'] = $team;
-		echo json_encode ($responseArray);
-	}
-
 }

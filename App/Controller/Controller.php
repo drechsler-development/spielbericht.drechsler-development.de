@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use DD\Exceptions\ValidationException;
 use Exception;
 use Monolog\Logger;
 
@@ -13,6 +14,7 @@ use Monolog\Logger;
 abstract class Controller
 {
 
+	public array $params = [];
 	/**
 	 * Parameters from the matched route
 	 * @var array
@@ -29,6 +31,7 @@ abstract class Controller
 	 * @param array $route_params Parameters from the route
 	 *
 	 * @return void
+	 * @throws ValidationException
 	 */
 	public function __construct (array $route_params) {
 

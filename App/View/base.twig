@@ -3,35 +3,79 @@
 <head>
     <title>Spielbericht-Generator HobbyLiga Leipzig</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- BEGIN PAGE LEVEL PLUGINS -->
+    {% block PAGE_LEVEL_STYLES %}
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap/css/bootstrap.css') }}" />
 
-    <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap/css/bootstrap.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-timepicker/css/bootstrap-timepicker.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-select/bootstrap-select.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/select2/select2.css') }}" />
 
-    <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css') }}" />
+        <!-- Include Bootstrap DateTimePicker CDN -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 
-    <!-- Include Bootstrap DateTimePicker CDN -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/css/custom.css') }}" />
 
-    <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}" />
-    <link rel="stylesheet" href="{{ asset('/assets/css/custom.css') }}" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Golos+Text&display=swap" rel="stylesheet">
+        <!-- FontAwesome -->
+        <link rel="stylesheet" href="{{ asset('/assets/fontawesome/css/all.css') }}" />
+
+        <!-- TOASTR -->
+        <link rel="stylesheet" type="text/css" href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}?v={{ CODE_VERSION }}" />
+
+    {% endblock %}
+    <!-- END PAGE LEVEL PLUGINS -->
 </head>
 <body>
+<header>
+    <!-- NAVIGATION -->
+    {{ include('navigation.twig') }}
+</header>
+<main role="main" class="container">
+    {% block CONTENT %}
 
-{% block CONTENT %}
-
-{% endblock %}
+    {% endblock %}
+</main>
 
 <!-- BEGIN FOOTER -->
 
-<div class="footer container">
-    <div class="row">
-        <div class="col-6">
-            {{ 2023 }} &copy; [drechsler.development]
-        </div>
-        <div class="col-6 text-right">
-            | <span class="badge badge-success">v.1.0.3</span> (Release from 08.02.2023)
+{# <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top bg-dark text-white">
+    <div class="col-md-4">
+        © 2023 [drechsler.development]
+    </div>
+
+    <ul class="nav col-md-4">
+        <li class="ms-3"><span class="badge badge-success">v.1.0.3</span></li>
+    </ul>
+</footer> #}
+
+<footer class="footer bg-dark">
+    <div class="container">
+        <span class="text-muted">© 2023 [drechsler.development] | <span class="badge badge-success">v.1.0.3</span></span>
+    </div>
+</footer>
+
+<!-- START General Modal1 -->
+<div class="modal hide fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                {# <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&nbsp;</button> #}
+                <h4 class="modal-title margin-right-20" id="myModalLabel"></h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer" style="display: none;"></div>
+
         </div>
     </div>
 </div>
+<!-- END General Modal -->
+
 <!-- END FOOTER -->
 
 <!-- BEGIN JAVASCRIPTS(Load javascripts at bottom, this will reduce page load time) -->
@@ -51,10 +95,19 @@
 <!-- Bootstrap Timepicker -->
 <!-- Requires Moment.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
+<script src="{{ asset('/assets/plugins/bootstrap-timepicker/js/bootstrap-timepicker.js') }}"></script>
 <!-- Bootstrap Toast -->
 <script src="{{ asset('/assets/plugins/bootstrap-toastr/toastr.js') }}"></script>
+<!-- Bootstrap Select -->
+<script src="{{ asset('/assets/plugins/bootstrap-select/bootstrap-select.js') }}"></script>
+<script src="{{ asset('/assets/plugins/select2/select2.js') }}"></script>
+<!-- Pulsate -->
+<script src="{{ asset('/assets/plugins/jquery.pulsate.min.js') }}"></script>
+<!-- Fontawesome -->
+<script src="{{ asset('/assets/fontawesome/js/all.js') }}"></script>
 <script src="{{ asset('/assets/scripts/app.js') }}"></script>
+<script src="{{ asset('/assets/scripts/cms.js') }}"></script>
+<script src="{{ asset('/assets/scripts/jsScriptLibrary.js') }}"></script>
 <!-- END CORE PLUGINS -->
 
 <!-- BEGIN PAGE LEVEL PLUGINS -->
@@ -65,7 +118,7 @@
 
 <!-- BEGIN PAGE LEVEL SCRIPTS -->
 {% block PAGE_LEVEL_SCRIPTS %}
-
+    
 {% endblock %}
 <!-- END PAGE LEVEL SCRIPTS -->
 
@@ -74,6 +127,7 @@
     <script>
         $(document).ready(function () {
             App.init(); // initlayout and core plugins
+            CMS.init(); // initlayout and core plugins
         });
     </script>
 {% endblock %}
