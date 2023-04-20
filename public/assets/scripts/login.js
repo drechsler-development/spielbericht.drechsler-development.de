@@ -23,9 +23,9 @@ let Login = function () {
 
                     let error = response.error
 
-                    if (error == "") {
+                    if (error === "") {
                         console.log("Login successful");
-                        window.location.href = "/?loggedOut=true";
+                        window.location.href = "/";
                     } else {
 
                         errorMessage.html(error);

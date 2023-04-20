@@ -5,27 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- BEGIN PAGE LEVEL PLUGINS -->
     {% block PAGE_LEVEL_STYLES %}
-        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap/css/bootstrap.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap/css/bootstrap.css') }}"/>
 
-        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css') }}" />
-        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-timepicker/css/bootstrap-timepicker.css') }}" />
-        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-select/bootstrap-select.css') }}" />
-        <link rel="stylesheet" href="{{ asset('/assets/plugins/select2/select2.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker.css') }}"/>
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-timepicker/css/bootstrap-timepicker.css') }}"/>
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-select/bootstrap-select.css') }}"/>
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/select2/select2.css') }}"/>
 
         <!-- Include Bootstrap DateTimePicker CDN -->
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css"
+              rel="stylesheet">
 
-        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}" />
-        <link rel="stylesheet" href="{{ asset('/assets/css/custom.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}"/>
+        <link rel="stylesheet" href="{{ asset('/assets/css/custom.css') }}"/>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Golos+Text&display=swap" rel="stylesheet">
         <!-- FontAwesome -->
-        <link rel="stylesheet" href="{{ asset('/assets/fontawesome/css/all.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/assets/fontawesome/css/all.css') }}"/>
 
         <!-- TOASTR -->
-        <link rel="stylesheet" type="text/css" href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}?v={{ CODE_VERSION }}" />
+        <link rel="stylesheet" type="text/css"
+              href="{{ asset('/assets/plugins/bootstrap-toastr/toastr.min.css') }}?v={{ CODE_VERSION }}"/>
 
     {% endblock %}
     <!-- END PAGE LEVEL PLUGINS -->
@@ -55,7 +57,8 @@
 
 <footer class="footer bg-dark">
     <div class="container">
-        <span class="text-muted">© 2023 [drechsler.development] | <span class="badge badge-success">v.1.0.3</span></span>
+        <span class="text-muted">© 2023 [drechsler.development] | <span
+                    class="badge badge-success">v.1.0.3</span></span>
     </div>
 </footer>
 
@@ -75,6 +78,70 @@
     </div>
 </div>
 <!-- END General Modal -->
+
+<!--Start Show Session Expire Warning Popup here -->
+
+<div class="modal fade" id="session-expire-warning-modal" aria-hidden="true" data-keyboard="false"
+     data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Sitzung wird bald ablaufen</h4>
+            </div>
+
+            <div class="modal-body">
+                Deine Sitzung wird in <b><span id="seconds-timer"></span></b> Sekunden ablaufen.<br>
+                Möchtest Du weiter arbeiten?
+            </div>
+
+            <div class="modal-footer">
+                <button
+                        id="btnOk" type="button" class="btn btn-default"
+                        style="padding: 6px 12px; margin-bottom: 0; font-size: 14px; font-weight: normal; border: 1px solid transparent; border-radius: 4px;  background-color: #428bca; color: #FFF;">
+                    Ich mache weiter
+                </button>
+                <button id="btnLogoutNow" type="button" class="btn btn-default"
+                        style="padding: 6px 12px; margin-bottom: 0; font-size: 14px; font-weight: normal; border: 1px solid transparent; border-radius: 4px;  background-color: #428bca; color: #FFF;">
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!--End Show Session Expire Warning Popup here -->
+
+<!--Start Show Session Expire Popup here -->
+
+<div class="modal fade" id="session-expired-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Sitzung abgelaufen</h4>
+            </div>
+
+            <div class="modal-body">
+                Deine Sitzung ist abgelaufen.<br>
+                Bitte logge dich erneut ein!
+            </div>
+
+            <div class="modal-footer">
+                <button id="btnExpiredOk" type="button" class="btn btn-primary" data-dismiss="modal"
+                        style="padding: 6px 12px; margin-bottom: 0; font-size: 14px; font-weight: normal; border: 1px solid transparent; border-radius: 4px; background-color: #428bca; color: #FFF;">
+                    Ok
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 
 <!-- END FOOTER -->
 
@@ -107,6 +174,7 @@
 <script src="{{ asset('/assets/fontawesome/js/all.js') }}"></script>
 <script src="{{ asset('/assets/scripts/app.js') }}"></script>
 <script src="{{ asset('/assets/scripts/cms.js') }}"></script>
+<script src="{{ asset('/assets/scripts/session.js') }}"></script>
 <script src="{{ asset('/assets/scripts/jsScriptLibrary.js') }}"></script>
 <!-- END CORE PLUGINS -->
 
@@ -118,7 +186,7 @@
 
 <!-- BEGIN PAGE LEVEL SCRIPTS -->
 {% block PAGE_LEVEL_SCRIPTS %}
-    
+
 {% endblock %}
 <!-- END PAGE LEVEL SCRIPTS -->
 
@@ -126,8 +194,9 @@
 {% block CALL_SCRIPT %}
     <script>
         $(document).ready(function () {
-            App.init(); // initlayout and core plugins
-            CMS.init(); // initlayout and core plugins
+            App.init(); // init layout and core plugins
+            CMS.init(); // init core CMS functionality
+            Session.init(); // init session functionality
         });
     </script>
 {% endblock %}
