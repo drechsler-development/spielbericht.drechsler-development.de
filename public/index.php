@@ -1,113 +1,172 @@
 <?php
 
+use App\Core\ResponseArray;
+use App\Core\View;
+use DD\Exceptions\LoginException;
+use DD\Exceptions\PermissionException;
+use DD\Mailer\Mailer;
+use DD\SystemType;
+use DI\ContainerBuilder;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\App;
+
 session_start ();
 
-use App\Controller\GameController;
-use App\Controller\GameReportController;
-use App\Controller\LoginController;
-use App\Controller\TeamController;
-use App\Error;
-use App\View;
-use FastRoute\Dispatcher;
-use FastRoute\RouteCollector;
-use function FastRoute\simpleDispatcher;
-
-require_once __DIR__.'/../config.php';
-
-$controllerName = "";
-$method         = "";
-$params         = [];
+require_once '../vendor/autoload.php';
+require_once __DIR__ . '/../config.php';
 
 try {
 
-	$dispatcher = simpleDispatcher (function(RouteCollector $r) {
+	set_error_handler ('\App\Core\ErrorHandler::SetErrorHandler');
+	set_exception_handler ('\App\Core\ErrorHandler::SetExceptionHandler');
 
-		//HomePage
-		$r->addRoute ('GET', '[/]', TeamController::class.'::Index');
-		//Handle Login/Logout
-		$r->addRoute ('GET', '/Login', LoginController::class.'::ShowLogin');
-		$r->addRoute ('POST', '/Login', LoginController::class.'::Login');
-		//$r->addRoute ('POST', '/Login/Login', LoginController::class.'::Login');
-		$r->addRoute ('GET', '/Logout', LoginController::class.'::Logout');
+	$containerBuilder = new ContainerBuilder();
+	$containerBuilder->addDefinitions (__DIR__ . '/../services.php');
+	$container = $containerBuilder->build ();
 
-		//GameReport page
-		$r->addRoute ('GET', '/GameReport', GameReportController::class.'::Index');
-		$r->addRoute ('GET', '/GameReport/LoadPlayers/{id:\d+}', GameReportController::class.'::LoadPlayers');
-		$r->addRoute ('POST', '/GameReport/CreateReport', GameReportController::class.'::CreateReport');
-		$r->addRoute ('POST', '/Team/UpdatePlayers', TeamController::class.'::UpdatePlayers');
-		$r->addRoute ('GET', '/Game', GameController::class.'::Index');
-		$r->addRoute ('POST', '/Game/LoadLines', GameController::class.'::LoadLines');
-		$r->addRoute ('GET', '/Teams', TeamController::class.'::Index');
-		$r->addRoute ('POST', '/Teams/LoadSingle', TeamController::class.'::LoadSingle');
-		$r->addRoute ('POST', '/Teams/Save', TeamController::class.'::Save');
-		// The /{title} suffix is optional
-		$r->addRoute ('GET', '/articles/{id:\d+}[/{title}]', 'get_article_handler');
+	//Create the Slim Application container
+	$app = $container->get (App::class);
+
+	//Add the routes
+	require __DIR__ . '/../App/Routes/public.php';
+
+	$app->get ('/hello/{name}', function (ServerRequestInterface $request, ResponseInterface $response) {
+
+		$name = $request->getAttribute ('name');
+		$response->getBody ()->write ('Hello ' . $name);
+
+		return $response;
 	});
 
-	// Fetch method and URI from somewhere
-	$httpMethod = $_SERVER['REQUEST_METHOD'];
-	$uri        = $_SERVER['REQUEST_URI'];
+	$app->run ();
 
-	// Strip query string (?foo=bar) and decode URI
-	if (false !== $pos = strpos ($uri, '?')) {
-		$uri = substr ($uri, 0, $pos);
-	}
-	$uri = rawurldecode ($uri);
+} catch (PDOException|Exception $e) {
 
-	$routeInfo = $dispatcher->dispatch ($httpMethod, $uri);
+	try {
 
-	switch ($routeInfo[0]) {
-		case Dispatcher::NOT_FOUND:
-			View::RenderTemplate ('Error/404.twig');
-			break;
-		case Dispatcher::METHOD_NOT_ALLOWED:
-			$allowedMethods = $routeInfo[1];
-			View::RenderTemplate ('Error/405.twig');
-			break;
-		case Dispatcher::FOUND:
+		$CODE_VERSION         = "ERR" . rand (100000, 999999); //just a random number to identify the error in the logs and emails
+		$data['CODE_VERSION'] = $CODE_VERSION;
+		$htmlBody             = '';
+		$subjectSuffix        = '';
 
-			$handler        = $routeInfo[1];
-			$controllerName = substr ($handler, 0, strpos ($handler, '::'));
-			$params         = $routeInfo[2];
+		if ($e instanceof PDOException) {
+			$subjectSuffix = 'DB';
+		} else if (str_contains ($e->getMessage (), 'Not found')) {
+			$subjectSuffix = '404';
+		} else {
+			$subjectSuffix = '500';
+		}
 
-			if (class_exists ($controllerName) || class_exists ($controllerName."Controller")) {
-				if (!class_exists ($controllerName)) {
-					$controllerName = $controllerName."Controller";
+		if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+			$data['errorMessage'] = '<br><b>Message:</b> ' . $e->getMessage () . ' <br>';
+
+			if (SYSTEMTYPE !== SystemType::PROD && SYSTEMTYPE !== "") {
+
+				$data['errorMessage'] .= '<b>File:</b> ' . $e->getFile () . ' <br>
+								 <b>Line:</b> ' . $e->getLine () . ' <br><b>Stacktrace:</b> ';
+				$array                = explode ("#", $e->getTraceAsString ());
+				foreach ($array as $row) {
+					$row = str_replace (str_replace ('/public', '', $_SERVER['DOCUMENT_ROOT']), '', $row);
+					if (!empty($row)) {
+						$data['errorMessage'] .= "<br>#" . $row;
+					}
 				}
+
 			}
 
-			$method     = substr ($handler, strpos ($handler, '::') + 2);
-			$controller = new $controllerName($params);
-
-			/*echo "ControllerName: ".$controllerName."<br>";
-			echo "MethodName: ".$method."<br>";
-			echo "Params: ".json_encode ($params)."<br>";*/
-
-			//Check if we can call the method in the controllerName
-			//Attention: we do not call the correct method as we will add action at the end in the magic method __call
-			// within each backend controllerName to force calling the login method first
-			if (is_callable ([
-				$controller,
-				$method
-			])) {
-
-				if ($method != "CheckSession") {
-					$_SESSION['currentSessionTime'] = date ("Y-m-d H:i:s");
-				}
-
-				//Finally calll the class with the method
-				$controller->params = $params;
-				$controller->$method();
-
+			if ($e instanceof PDOException) {
+				$htmlBody = View::RenderTemplate ('/Error/DB.twig', array_merge ($data));
+			} else if (str_contains ($e->getMessage (), 'Not found')) {
+				//add header with 404 status
+				header ('HTTP/1.0 404 Not Found');
+				$htmlBody = View::RenderTemplate ('/Error/404.twig', array_merge ($data));
+			} else if ($e instanceof PermissionException) {
+				$data['showErrorMessage'] = true;
+				$htmlBody                 = View::RenderTemplate ('/Error/401.twig', array_merge ($data));
 			} else {
-				throw new Exception("Method $method (in controllerName $controllerName) not found");
+				$htmlBody = View::RenderTemplate ('/Error/500.twig', array_merge ($data));
 			}
+
+			echo $htmlBody;
+
+		} else {
+
+			header ('Content-Type: application/json');
+
+			if ($e instanceof PDOException) {
+				header ('HTTP/1.0 500 Database Error');
+				$errorMessage = 'Database error (1).';
+			} else if (str_contains ($e->getMessage (), 'Not found')) {
+				//add header with 404 status
+				header ('HTTP/1.0 404 Not Found');
+				$errorMessage = 'Page not found (2).';
+			} else if ($e instanceof PermissionException) {
+				header ('HTTP/1.0 403 Forbidden');
+				$errorMessage = 'Unauthorized access (3).';
+			} else if ($e instanceof LoginException) {
+				header ('HTTP/1.0 403 Forbidden LoginException');
+				$errorMessage = 'Unauthorized access (3).';
+			} else {
+				header ('HTTP/1.0 500 Internal Server Error');
+				$errorMessage = 'Internal Server Error (4)';
+			}
+
+			if (SYSTEMTYPE !== SystemType::PROD && SYSTEMTYPE !== "") {
+				$errorMessage .= ' Error: ' . $e->getMessage ();
+			}
+
+			$ResponseArray        = new ResponseArray();
+			$ResponseArray->error = $errorMessage;
+			echo $ResponseArray->ReturnOutput (true);
+
+		}
+
+		$mailBody = $e->getMessage ();
+		$trace    = $e->getTraceAsString ();
+
+		$mailBody .= '<br><br><b>File:</b> ' . $e->getFile () . ' <br>
+				<b>Line:</b> ' . $e->getLine () . ' <br><b>Stacktrace:</b> ';
+		$array    = explode ("#", $e->getTraceAsString ());
+		foreach ($array as $row) {
+			$row = str_replace (str_replace ('/public', '', $_SERVER['DOCUMENT_ROOT']), '', $row);
+			if (!empty($row)) {
+				$mailBody .= "<br>#" . $row;
+			}
+		}
+
+		//ADD URL and Query String intio the body
+		$mailBody .= '<br><br><b>URL:</b> ' . $_SERVER['REQUEST_URI'] . ' <br>
+				<b>Query String:</b> ' . $_SERVER['QUERY_STRING'] . ' <br>';
+
+		//Add Session Data (but please check if each element of the session array is an array and split that up)
+		$mailBody .= '<br><br><b>Session:</b> ' . json_encode ($_SESSION);
+		//Format that JSON array by adding line breaks
+		$mailBody = str_replace (',', ',<br>', $mailBody);
+		$mailBody = str_replace ('{', '{<br>', $mailBody);
+		$mailBody = str_replace ('}', '<br>}', $mailBody);
+
+
+		if ($subjectSuffix == '404') {
+			$logger       = new Logger('my_logger');
+			$file_handler = new StreamHandler(__DIR__ . '/logs/404.log');
+			$logger->pushHandler ($file_handler);
+			$logger->error ($mailBody);
+		} else {
+			$Mailer = new Mailer();
+			$Mailer->DDAddTo (EMAIL_DEVELOPER);
+			$Mailer->DDSubject ('Error :: ' . $subjectSuffix);
+			$Mailer->setFrom (SYSTEMTYPE_NAME . '@' . $_SERVER['HTTP_HOST'], SYSTEMNAME . ' :: ' . SYSTEMTYPE_NAME);
+			$Mailer->msgHTML ($mailBody);
+			$Mailer->DDSend ();
+		}
+
+	} catch (Exception $ex) {
+		//If sending the mail or logging fails, we still need to catch that to avoid infinite loops
+		echo 'A critical error occurred.' . $ex->getMessage ();
 	}
 
-} catch (Exception $e) {
-	echo Error::HandleErrorMessage ($e);
 }
-
-/*echo "ControllerName: ".$controllerName."<br>";
-echo "MethodName: ".$method."<br>";
-echo "Params: ".json_encode ($params)."<br>";*/

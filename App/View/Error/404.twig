@@ -18,12 +18,11 @@
                     <div class=" details">
                         <h3>Oops! Hier ist <b>Murphy</b> unterwegs.</h3>
                         <p>
-                            Scheint so, als gäbe es noch keine Seite für diesen Link, oder es liegt ein Schreibfehler vor!<br />
-                            Der Administrator/Entwickler wurde aber informiert und wird den Fehler schnellstens beheben.<br /><br />
+                            Scheint so, als gäbe es noch keine Seite für diesen Link, oder es liegt ein Schreibfehler vor!<br /> Der Administrator/Entwickler wurde aber informiert und wird den Fehler schnellstens beheben.<br /><br />
                         </p>
                         {% if errorMessage %}
                             <p>
-                                Fehler: {{ errorMessage }}<br>
+                                Fehler: {{ errorMessage|raw }}<br>
                             </p>
                         {% endif %}
                     </div>

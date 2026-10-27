@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+session_start ();
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -9,21 +9,21 @@ require __DIR__ . '/../config.php';
 
 if (!empty($_SESSION['report'])) {
 
-    $responseArray['error'] = '';
+	$responseArray['error'] = '';
 
-    // instantiate and use the dompdf class
-    $options = new Options();
-    $options->set('isRemoteEnabled', true);
+	// instantiate and use the dompdf class
+	$options = new Options();
+	$options->set ('isRemoteEnabled', true);
 
-    $dompdf = new Dompdf($options);
-    $pattern = "/[^a-zA-Z0-9_\-]/";
-    $t1FileName = preg_replace($pattern, "_", $_SESSION['report']['t1Name']);
-    $t2FileName = preg_replace($pattern, "_", $_SESSION['report']['t2Name']);
-    $data = file_get_contents('assets/img/spielbericht.jpg');
-    $base64 = 'data:image/jpeg;base64,' . base64_encode($data);
+	$dompdf     = new Dompdf($options);
+	$pattern    = "/[^a-zA-Z0-9_\-]/";
+	$t1FileName = preg_replace ($pattern, "_", $_SESSION['report']['t1Name']);
+	$t2FileName = preg_replace ($pattern, "_", $_SESSION['report']['t2Name']);
+	$data       = file_get_contents ('assets/img/spielbericht.jpg');
+	$base64     = 'data:image/jpeg;base64,' . base64_encode ($data);
 
-    ob_start();
-    ?>
+	ob_start ();
+	?>
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -158,22 +158,32 @@ if (!empty($_SESSION['report'])) {
                         <td style="width: 40%">Spielberichtsbogen Volleyball</td>
                         <td colspan="3">
                             <div class="inline">Spielort: <span
-                                    class="underline"><?php echo $_SESSION['report']['address']; ?></span></div>
+                                        class="underline"><?php
+									echo $_SESSION['report']['address']; ?></span></div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="width: 40%">Staffel:
-                            <b><?php echo "Staffel " . $_SESSION['report']['groupName']; ?></b></td>
+                        <td style="width: 40%">
+							<?php
+							$name = $_SESSION['report']['groupName'];
+							$name = str_contains ($name, "Pokal") ? "Pokalspiel" : "Staffel " . $name;
+							?>
+
+                            <b><?php
+								echo $name; ?></b></td>
                         <td style="width: 20%">Datum: <span
-                                class="underline"><?php echo $_SESSION['report']['date']; ?></span></td>
+                                    class="underline"><?php
+								echo $_SESSION['report']['date']; ?></span></td>
                         <td style="width: 20%">Beginn: <span
-                                class="underline"><?php echo $_SESSION['report']['startTime']; ?></span></td>
+                                    class="underline"><?php
+								echo $_SESSION['report']['startTime']; ?></span></td>
                         <td style="width: 20%">Ende: <span
-                                class="underline"><?php echo $_SESSION['report']['endTime']; ?></span></td>
+                                    class="underline"><?php
+								echo $_SESSION['report']['endTime']; ?></span></td>
                     </tr>
                 </table>
             </td>
-            <td style="line-height: 55px;">LOGO</td>
+            <td style="line-height: 55px;">&nbsp;</td>
         </tr>
     </table>
 
@@ -183,18 +193,20 @@ if (!empty($_SESSION['report'])) {
 
                 <table>
                     <tr>
-                        <td class="border" style="width: 40%;">Heim: <b><?php echo $_SESSION['report']['t1Name']; ?></b>
+                        <td class="border" style="width: 40%;">Heim: <b><?php
+								echo $_SESSION['report']['t1Name']; ?></b>
                         </td>
                         <td style="text-align: center">Manschaften</td>
-                        <td class="border" style="width: 40%;">Gast: <b><?php echo $_SESSION['report']['t2Name']; ?></b>
+                        <td class="border" style="width: 40%;">Gast: <b><?php
+								echo $_SESSION['report']['t2Name']; ?></b>
                         </td>
                     </tr>
                 </table>
                 <table>
 
-                    <?php
-                    for ($i = 1; $i < 6; $i++) {
-                        ?>
+					<?php
+					for ($i = 1; $i < 6; $i++) {
+						?>
 
                         <tr>
                             <td class="border" style="width: 40%;">
@@ -247,7 +259,8 @@ if (!empty($_SESSION['report'])) {
                                 </table>
                             </td>
                             <td style="text-align: center">
-                                <?php echo $i; ?>. Satz
+								<?php
+								echo $i; ?>. Satz
                             </td>
                             <td style="border: 1px solid black; width: 40%;">
                                 <table class="points">
@@ -362,9 +375,9 @@ if (!empty($_SESSION['report'])) {
                                 </table>
                             </td>
                         </tr>
-                        <?php
-                    }
-                    ?>
+						<?php
+					}
+					?>
 
                 </table>
                 <table>
@@ -401,7 +414,8 @@ if (!empty($_SESSION['report'])) {
                 <!-- HEIM -->
                 <table class="border">
                     <tr>
-                        <td colspan="2"><b><?php echo $_SESSION['report']['t1Name']; ?></b></td>
+                        <td colspan="2"><b><?php
+								echo $_SESSION['report']['t1Name']; ?></b></td>
                     </tr>
                 </table>
                 <table class="team border">
@@ -409,25 +423,27 @@ if (!empty($_SESSION['report'])) {
                         <td class="first-cell" style="width: 10%;">Nr.</td>
                         <td class="second-cell">Name</td>
                     </tr>
-                    <?php
-                    $totalCount = !empty($_SESSION['report']['playersTeam1']) ? count($_SESSION['report']['playersTeam1']) : 0;
-                    foreach ($_SESSION['report']['playersTeam1'] as $player) {
-                        ?>
+					<?php
+					$totalCount = !empty($_SESSION['report']['playersTeam1']) ? count ($_SESSION['report']['playersTeam1']) : 0;
+					foreach ($_SESSION['report']['playersTeam1'] as $player) {
+						?>
                         <tr>
-                            <td class="first-cell"><?php echo $player['number']; ?></td>
-                            <td class="second-cell"><?php echo $player['name']; ?></td>
+                            <td class="first-cell"><?php
+								echo $player['number']; ?></td>
+                            <td class="second-cell"><?php
+								echo $player['name']; ?></td>
                         </tr>
-                        <?php
-                    }
-                    for ($i = 0; $i < 11 - $totalCount; $i++) {
-                        ?>
+						<?php
+					}
+					for ($i = 0; $i < 11 - $totalCount; $i++) {
+						?>
                         <tr>
                             <td class="first-cell">&nbsp;</td>
                             <td class="second-cell">&nbsp;</td>
                         </tr>
-                        <?php
-                    }
-                    ?>
+						<?php
+					}
+					?>
                     <tr>
                         <td colspan="2">
                             <table>
@@ -442,7 +458,8 @@ if (!empty($_SESSION['report'])) {
                 <!-- GAST -->
                 <table class="border" style="margin-top: 15px;">
                     <tr>
-                        <td colspan="2"><b><?php echo $_SESSION['report']['t2Name']; ?></b></td>
+                        <td colspan="2"><b><?php
+								echo $_SESSION['report']['t2Name']; ?></b></td>
                     </tr>
                 </table>
                 <table class="team border">
@@ -450,25 +467,27 @@ if (!empty($_SESSION['report'])) {
                         <td class="first-cell" style="width: 10%;">Nr.</td>
                         <td class="second-cell">Name</td>
                     </tr>
-                    <?php
-                    $totalCount = !empty($_SESSION['report']['playersTeam2']) ? count($_SESSION['report']['playersTeam2']) : 0;
-                    foreach ($_SESSION['report']['playersTeam2'] as $player) {
-                        ?>
+					<?php
+					$totalCount = !empty($_SESSION['report']['playersTeam2']) ? count ($_SESSION['report']['playersTeam2']) : 0;
+					foreach ($_SESSION['report']['playersTeam2'] as $player) {
+						?>
                         <tr>
-                            <td class="first-cell"><?php echo $player['number']; ?></td>
-                            <td class="second-cell"><?php echo $player['name']; ?></td>
+                            <td class="first-cell"><?php
+								echo $player['number']; ?></td>
+                            <td class="second-cell"><?php
+								echo $player['name']; ?></td>
                         </tr>
-                        <?php
-                    }
-                    for ($i = 0; $i < 11 - $totalCount; $i++) {
-                        ?>
+						<?php
+					}
+					for ($i = 0; $i < 11 - $totalCount; $i++) {
+						?>
                         <tr>
                             <td class="first-cell">&nbsp;</td>
                             <td class="second-cell">&nbsp;</td>
                         </tr>
-                        <?php
-                    }
-                    ?>
+						<?php
+					}
+					?>
                     <tr>
                         <td colspan="2">
                             <table>
@@ -486,29 +505,25 @@ if (!empty($_SESSION['report'])) {
     </body>
     </html>
 
-    <?php
-    $content = ob_get_contents();
-    ob_end_clean();
+	<?php
+	$content = ob_get_contents ();
+	ob_end_clean ();
 
-    if (!empty($_SESSION['report']['preview'])) {
-        echo $content;
-        exit;
-    }
+	if (!empty($_SESSION['report']['preview'])) {
+		echo $content;
+		exit;
+	}
 
-    $dompdf->loadHtml($content);
+	$dompdf->loadHtml ($content);
 
-    //echo $content;
+	//echo $content;
 
-    // (Optional) Setup the paper size and orientation
-    $dompdf->setPaper('A4', 'landscape');
+	// (Optional) Setup the paper size and orientation
+	$dompdf->setPaper ('A4', 'landscape');
 
-    // Render the HTML as PDF
-    $dompdf->render();
+	// Render the HTML as PDF
+	$dompdf->render ();
 
-    // Output the generated PDF to Browser
-    $dompdf->stream();
+	// Output the generated PDF to Browser
+	$dompdf->stream ();
 }
-
-
-
-

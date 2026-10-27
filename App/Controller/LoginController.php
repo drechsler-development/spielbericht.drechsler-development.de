@@ -2,40 +2,56 @@
 
 namespace App\Controller;
 
+use App\Core\ErrorHandler;
+use App\Core\ResponseArray;
+use App\Core\View;
 use App\Model\Login;
-use App\ResponseArray;
-use App\View;
 use Exception;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class LoginController extends Controller
-{
+class LoginController extends Controller {
 
-	public function __construct () { }
+	public ResponseArray $ResponseArray;
 
-	public function ShowLoginAction () {
+	public function __construct () {
+		$this->ResponseArray = new ResponseArray();
+	}
+
+	public function ShowLoginAction (ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
 
 		$data = [
 			'login' => 1,
 		];
 
-		View::RenderTemplate ('login.twig', $data);
+		try {
+
+			$data = [
+
+				'PAGE_TITLE'       => 'Login',
+				'PAGE_DESCRIPTION' => '',
+			];
+
+			$body = View::RenderTemplate ('login.twig', $data);
+
+		} catch (Exception $e) {
+
+			$body = View::RenderTemplate ('Admin/Error/500.twig', array_merge (['errorMessage' => ErrorHandler::HandleErrorMessage ($e)]));
+
+		}
+
+		$response->getBody ()->write ($body);
+
+		return $response;
 
 	}
 
-	public function LoginAction () {
-
-		$ResponseArray = new ResponseArray();
-		$data          = [];
+	public function LoginAction (ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
 
 		try {
-
-			$response['data']    = [];
-			$response['status']  = '';
-			$response['message'] = '';
-			$response['error']   = '';
 
 			$email    = $_POST['emailaddress'] ?? '';
 			$password = $_POST['password'] ?? '';
@@ -46,10 +62,12 @@ class LoginController extends Controller
 			$Login->Login ();
 
 		} catch (Exception $e) {
-			$ResponseArray->error = $e->getMessage ();
+			$this->ResponseArray->error = $e->getMessage ();
 		}
 
-		$ResponseArray->ReturnOutput ();
+		$response->getBody ()->write ($this->ResponseArray->ReturnOutput (true));
+
+		return $response->withHeader ('Content-Type', 'application/json')->withStatus (201);
 
 	}
 
@@ -59,15 +77,30 @@ class LoginController extends Controller
 	 * @throws RuntimeError
 	 * @throws SyntaxError
 	 */
-	public function LogoutAction (): void {
+	public function LogoutAction (ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
 
-		Login::Logout ();
+		try {
 
-		$data = [
-			'logout' => 1,
-		];
+			Login::Logout ();
 
-		View::RenderTemplate ('login.twig', $data);
+			$data = [
+
+				'PAGE_TITLE'       => 'Login',
+				'PAGE_DESCRIPTION' => '',
+				'logout'           => 1,
+			];
+
+			$body = View::RenderTemplate ('login.twig', $data);
+
+		} catch (Exception $e) {
+
+			$body = View::RenderTemplate ('Admin/Error/500.twig', array_merge (['errorMessage' => ErrorHandler::HandleErrorMessage ($e)]));
+
+		}
+
+		$response->getBody ()->write ($body);
+
+		return $response;
 
 	}
 }

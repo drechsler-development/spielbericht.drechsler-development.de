@@ -2,135 +2,175 @@
 
 namespace App\Controller;
 
+use App\Core\Controller\BackendController;
+use App\Core\ErrorHandler;
+use App\Core\View;
 use App\Error;
 use App\Model\Group;
 use App\Model\Player;
 use App\Model\Team;
-use App\ResponseArray;
-use App\View;
 use DD\Exceptions\ValidationException;
 use Exception;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class TeamController extends BackendController
-{
+class TeamController extends BackendController {
 
 	/**
-	 * @return void
+	 * @param Request  $request
+	 * @param Response $response
+	 *
+	 * @return Response
 	 * @throws LoaderError
 	 * @throws RuntimeError
 	 * @throws SyntaxError
 	 */
-	public function IndexAction (): void {
-
-		$Team  = new Team();
-		$teams = $Team->Load ();
-
-		$data = [
-			/*'navigationArray'  => $this->navigationArray,
-			'headerArray'      => $this->headerArray,*/
-			'PAGE_TITLE'       => 'Teamübersicht',
-			'PAGE_DESCRIPTION' => '',
-			'rows'             => $teams,
-		];
-
-		View::RenderTemplate ('Teams/index.twig', array_merge ($data, $this->globalData));
-
-	}
-
-	public function LoadAction (): void {
-
-		$ResponseArray = new ResponseArray();
-
-		$Team     = new Team();
-		$Team->id = $this->params['id'] ?? 0;
-		$teams    = $Team->Load ();
-
-		$ResponseArray->AddData (['Teams' => $teams]);
-
-		$ResponseArray->ReturnOutput ();
-
-	}
-
-	public function SaveAction (): void {
-
-		$ResponseArray = new ResponseArray();
-
-		$id                 = $_POST['id'] ?? 0;
-		$teamName           = $_POST['teamName'] ?? '';
-		$address            = $_POST['address'] ?? '';
-		$additionalAddress  = $_POST['additionalAddress'] ?? '';
-		$postCode           = $_POST['postCode'] ?? '';
-		$city               = $_POST['city'] ?? '';
-		$day                = $_POST['day'] ?? '';
-		$startTime          = $_POST['startTime'] ?? '';
-		$endTime            = $_POST['endTime'] ?? '';
-		$teamLeadName       = $_POST['teamLeadName'] ?? '';
-		$teamLeadEmail      = $_POST['teamLeadEmail'] ?? '';
-		$teamLeadTelephone  = $_POST['teamLeadTelephone'] ?? '';
-		$teamLeadTelephone  = str_replace (' ', '', $teamLeadTelephone);
-		$teamLeadTelephone  = str_replace ('0049', '+49', $teamLeadTelephone);
-		$teamLeadName2      = $_POST['teamLeadName2'] ?? '';
-		$teamLeadEmail2     = $_POST['teamLeadEmail2'] ?? '';
-		$teamLeadTelephone2 = $_POST['teamLeadTelephone2'] ?? '';
-		$teamLeadTelephone2 = str_replace (' ', '', $teamLeadTelephone2);
-		$teamLeadTelephone2 = str_replace ('0049', '+49', $teamLeadTelephone2);
+	public function IndexAction (Request $request, Response $response): Response {
 
 		try {
 
+			$Team  = new Team();
+			$teams = $Team->Load ();
+
+			$data = [
+				'PAGE_TITLE'       => 'Teamübersicht',
+				'PAGE_DESCRIPTION' => '',
+				'rows'             => $teams,
+			];
+
+			$body = \App\Core\View::RenderTemplate ('Teams/index.twig', $data);
+
+		} catch (Exception $e) {
+
+			$body = \App\Core\View::RenderTemplate ('Admin/Error/500.twig', array_merge ($this->globalData, ['errorMessage' => ErrorHandler::HandleErrorMessage ($e)]));
+
+		}
+
+		$response->getBody ()->write ($body);
+
+		return $response;
+
+	}
+
+	/**
+	 * Route-Beispiel:
+	 * $app->get('/Team/Load/{id:\d+}', [TeamController::class, 'LoadAction']);
+	 *
+	 * @param Request  $request
+	 * @param Response $response
+	 * @param array    $args
+	 *
+	 * @return Response
+	 */
+	public function LoadAction (Request $request, Response $response, array $args = []): Response {
+
+		try {
+
+			$Team     = new Team();
+			$Team->id = $args['id'] ?? 0;
+
+			$teams = $Team->Load ();
+
+			$this->ResponseArray->AddData ([
+				                               'Teams' => $teams,
+			                               ]);
+
+		} catch (Exception $e) {
+			$this->ResponseArray->error = $e->getMessage ();
+		}
+
+		$response->getBody ()->write ($this->ResponseArray->ReturnOutput (true));
+
+		return $response->withHeader ('Content-Type', 'application/json')->withStatus (201);
+
+	}
+
+	/**
+	 * @param Request  $request
+	 * @param Response $response
+	 *
+	 * @return Response
+	 */
+	public function SaveAction (Request $request, Response $response): Response {
+
+		try {
+
+			$post = $request->getParsedBody () ?? [];
+
+			$id                 = $post['id'] ?? 0;
+			$teamName           = $post['teamName'] ?? '';
+			$address            = $post['address'] ?? '';
+			$additionalAddress  = $post['additionalAddress'] ?? '';
+			$postCode           = $post['postCode'] ?? '';
+			$city               = $post['city'] ?? '';
+			$day                = $post['day'] ?? '';
+			$startTime          = $post['startTime'] ?? '';
+			$endTime            = $post['endTime'] ?? '';
+			$teamLeadName       = $post['teamLeadName'] ?? '';
+			$teamLeadEmail      = $post['teamLeadEmail'] ?? '';
+			$teamLeadTelephone  = $post['teamLeadTelephone'] ?? '';
+			$teamLeadName2      = $post['teamLeadName2'] ?? '';
+			$teamLeadEmail2     = $post['teamLeadEmail2'] ?? '';
+			$teamLeadTelephone2 = $post['teamLeadTelephone2'] ?? '';
+
+			$teamLeadTelephone  = str_replace ([' ', '0049'], ['', '+49'], $teamLeadTelephone);
+			$teamLeadTelephone2 = str_replace ([' ', '0049'], ['', '+49'], $teamLeadTelephone2);
+
+
 			if (empty($teamName)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keinen Teamnamen übergeben');
 			}
 
 			if (empty($address)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keine Adresse übergeben');
 			}
 
 			if (empty($postCode)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keine PLZ übergeben');
 			}
 
 			if (empty($city)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keine Stadt übergeben');
 			}
 
 			if (empty($day)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keinen Trainingstag übergeben');
 			}
 
 			if (empty($startTime)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keine Startzeit übergeben');
 			}
 
 			if (empty($endTime)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keine Endzeit übergeben');
 			}
 
 			if (empty($teamLeadName)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Keinen Ansprechpartner übergeben');
 			}
 
 			if (empty($teamLeadEmail) && empty($teamLeadTelephone)) {
-				throw new ValidationException("Keinen Namen übergeben");
+				throw new ValidationException('Bitte E-Mail oder Telefonnummer für Ansprechpartner 1 angeben');
 			}
 
 			if (!empty($teamLeadName2)) {
 				if (empty($teamLeadEmail2) && empty($teamLeadTelephone2)) {
-					throw new ValidationException("Keinen Namen übergeben");
+					throw new ValidationException('Bitte E-Mail oder Telefonnummer für Ansprechpartner 2 angeben');
 				}
 			}
 
 			if (!empty($teamLeadEmail)) {
 				if (!filter_var ($teamLeadEmail, FILTER_VALIDATE_EMAIL)) {
-					throw new ValidationException("Keine gültige Email übergeben für TeamLead1");
+					throw new ValidationException('Keine gültige E-Mail für Ansprechpartner 1 übergeben');
 				}
 			}
 
 			if (!empty($teamLeadEmail2)) {
 				if (!filter_var ($teamLeadEmail2, FILTER_VALIDATE_EMAIL)) {
-					throw new ValidationException("Keine gültige Email übergeben für TeamLead2");
+					throw new ValidationException('Keine gültige E-Mail für Ansprechpartner 2 übergeben');
 				}
 			}
 
@@ -156,93 +196,139 @@ class TeamController extends BackendController
 
 			$Team->Update ($array);
 
+			$this->ResponseArray->success = true;
+
+
 		} catch (Exception $e) {
-			$ResponseArray->error = Error::HandleErrorMessage ($e);
+			$this->ResponseArray->error = Error::HandleErrorMessage ($e);
 		}
 
-		$ResponseArray->ReturnOutput ();
+		$response->getBody ()->write ($this->ResponseArray->ReturnOutput (true));
+
+		return $response->withHeader ('Content-Type', 'application/json')->withStatus (201);
 
 	}
 
-	public function LoadSingleAction (): void {
+	/**
+	 * @param Request  $request
+	 * @param Response $response
+	 *
+	 * @return Response
+	 */
+	public function LoadSingleAction (Request $request, Response $response): Response {
 
-		$ResponseArray = new ResponseArray();
 
-		$id   = $_POST['id'] ?? 0;
-		$json = !empty($_POST['json']);
+		$post = $request->getParsedBody () ?? [];
+
+		$id   = $post['id'] ?? 0;
+		$json = !empty($post['json']);
 
 		try {
 
 			if (empty($id)) {
 				throw new ValidationException('Team ID is empty');
 			}
+
+			$data = [];
+
 			if (!$json) {
 				$Group          = new Group();
 				$groups         = $Group->Load ();
 				$data['groups'] = $groups;
-
 			}
 
-			$Team        = new Team();
-			$Team->id    = $id;
-			$teams       = $Team->Load ();
-			$data['row'] = $teams[0] ?? [];
+			$Team     = new Team();
+			$Team->id = $id;
 
-			if (!$json) {
-				ob_start ();
-				View::RenderTemplate ('Teams/form.twig', array_merge ($data, $this->globalData));
-				$data = ob_get_contents ();
-				ob_end_clean ();
-			} else {
-				echo json_encode ($data);
+			$teams = $Team->Load ();
+			$data  = $teams[0] ?? [];
 
-				return;
+			if ($json) {
+
+				$this->ResponseArray->AddData ([
+					                               'row' => $data,
+				                               ]);
+
+				$response->getBody ()->write ($this->ResponseArray->ReturnOutput (true));
+
+				return $response->withHeader ('Content-Type', 'application/json')->withStatus (201);
 			}
 
-			$ResponseArray->data = $data;
+			$this->ResponseArray->data = View::RenderTemplate ('Teams/index.twig', array_merge ($data, $this->globalData));
 
 		} catch (Exception $e) {
-			$ResponseArray->error = Error::HandleErrorMessage ($e);
+			$this->ResponseArray->error = $e->getMessage ();
 		}
 
-		$ResponseArray->ReturnOutput ();
+		$response->getBody ()->write ($this->ResponseArray->ReturnOutput (true));
+
+		return $response->withHeader ('Content-Type', 'application/json')->withStatus (201);
 
 	}
 
-	public function UpdatePlayersAction (): void {
 
-		//Show Array with pre
-		echo '<pre>';
-		print_r ($_POST);
-		echo '</pre>';
+	/**
+	 * @param Request  $request
+	 * @param Response $response
+	 *
+	 * @return Response
+	 */
+	public function UpdatePlayersAction (Request $request, Response $response): Response {
 
-		$responseArray['error'] = '';
 
-		//Building Team Player Arrays
-		$players = [];
-		for ($i = 0; $i < MAX_PLAYER_AMOUNT; $i++) {
-			//Team 1
-			$playerName   = 'p'.$i.'Name';
-			$playerNumber = 'p'.$i.'Number';
-			$playerArray  = [];
-			if (!empty($_POST[$playerName])) {
-				$playerArray['name']   = $_POST[$playerName];
-				$playerArray['number'] = !empty($_POST[$playerNumber]) ? $_POST[$playerNumber] : '';
-				$players[]             = $playerArray;
+		$post = $request->getParsedBody () ?? [];
+
+		try {
+
+			$players = [];
+
+			for ($i = 0; $i < MAX_PLAYER_AMOUNT; $i++) {
+
+				$playerName   = 'p' . $i . 'Name';
+				$playerNumber = 'p' . $i . 'Number';
+
+				if (!empty($post[$playerName])) {
+
+					$players[] = [
+						'name'   => $post[$playerName],
+						'number' => $post[$playerNumber] ?? '',
+					];
+
+				}
+
 			}
+
+			$teamId = $_SESSION['login']['teamId'] ?? 0;
+
+			if (empty($teamId)) {
+				throw new ValidationException('Keine Team-ID in der Session gefunden');
+			}
+
+			$Team     = new Team();
+			$Team->id = $teamId;
+
+			foreach ($players as $player) {
+
+				$Player         = new Player();
+				$Player->name   = $player['name'];
+				$Player->number = $player['number'];
+
+				$Team->AddPlayer ($Player);
+
+			}
+
+			$Team->UpdatePlayers ();
+
+			$this->ResponseArray->success = true;
+
+		} catch (Exception $e) {
+			$this->ResponseArray->error = $e->getMessage ();
 		}
 
-		$Team     = new Team();
-		$Team->id = $_SESSION['login']['teamId'];
-		foreach ($players as $player) {
-			$Player         = new Player();
-			$Player->name   = $player['name'];
-			$Player->number = $player['number'];
-			$Team->AddPlayer ($Player);
-		}
-		$Team->UpdatePlayers ();
+		$response->getBody ()->write ($this->ResponseArray->ReturnOutput (true));
 
-		echo json_encode ($responseArray);
+		return $response->withHeader ('Content-Type', 'application/json')->withStatus (201);
 
 	}
+
 }
